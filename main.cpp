@@ -1,5 +1,6 @@
 #include <iostream>
 #include <vector>
+#include <cmath>
 
 #include "SFML/Graphics.hpp"
 
@@ -11,25 +12,21 @@ int main(int argc, char* argv[]) {
 
   gameData.Load();
   
-  sf::RenderWindow window(sf::VideoMode(800, 800), "Settlers 1 remake");
-  window.setFramerateLimit(40);
+  sf::RenderWindow window(sf::VideoMode(1024, 1024), "Settlers 1 remake");
+  window.setFramerateLimit(25);
 
-  gameData.Print(next);
+  Entry e=gameData.GetData(next);
+
+
   
-  sf::Texture texture;
-  if (!texture.create(200, 200))
-    return 1;
-
-  texture.update(txArray);
-
-  sf::Sprite sprite;
-  sprite.setTexture(texture);
-  sprite.setScale(sf::Vector2f(4.f, 4.f));
-
   while (window.isOpen()) {
     sf::Event event;
+    sf::Texture texture;
+    sf::Sprite sprite;
+    sprite.setScale(sf::Vector2f(8.f, 8.f));    
+    
     while (window.pollEvent(event)) {
-      switch (event.type) {
+     switch (event.type) {
         case sf::Event::Closed:
           window.close();
           break;
@@ -37,15 +34,32 @@ int main(int argc, char* argv[]) {
         case sf::Event::KeyPressed:
           if (sf::Keyboard::isKeyPressed(sf::Keyboard::Right)) {
             ++next;
-            gameData.Print(next);
-            txArray=gameData.PixelArray(next);
-            texture.update(txArray);
+            e=gameData.GetData(next);
+            if (e.type==1) {
+    	      window.clear();
+              if (texture.create(e.unk2, e.unk4)) {
+                texture.update(&e.data[0]);
+                sprite.setTexture(texture);
+              } else if (texture.create(sqrt(e.data.size() / 4), sqrt(e.data.size() / 4))) {
+                texture.update(&e.data[0]);
+                sprite.setTexture(texture);
+              }				  
+            }
           }
           if (sf::Keyboard::isKeyPressed(sf::Keyboard::Left)) {
             --next;
-            gameData.Print(next);
-            txArray=gameData.PixelArray(next);
-            texture.update(txArray);
+            e=gameData.GetData(next);
+			
+            if (e.type==1) {
+              window.clear();
+              if (texture.create(e.unk2, e.unk4)) {
+                texture.update(&e.data[0]);
+                sprite.setTexture(texture);
+              } else if (texture.create(sqrt(e.data.size() / 4), sqrt(e.data.size() / 4))) {
+                texture.update(&e.data[0]);
+                sprite.setTexture(texture);
+              }				  
+            }
           }
           break;
 
@@ -60,8 +74,6 @@ int main(int argc, char* argv[]) {
           break;
       }
     }
-
-    window.clear();
     window.draw(sprite);
     window.display();
   }

@@ -1,5 +1,5 @@
 CXX=g++
-CPPFLAGS=-g3 -Wall -lsfml-graphics -lsfml-window -lsfml-system -std=c++17
+CPPFLAGS=-g3 -Wall -std=c++17 -lsfml-graphics -lsfml-window -lsfml-system
 
 SRC=main.cpp data.cpp
 EXEC=frag
