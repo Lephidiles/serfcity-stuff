@@ -35,6 +35,7 @@ int main(int argc, char* argv[]) {
           if (sf::Keyboard::isKeyPressed(sf::Keyboard::Right)) {
             ++next;
             e=gameData.GetData(next);
+            gameData.Print(next);
             if (e.type==1) {
     	      window.clear();
               if (texture.create(e.unk2, e.unk4)) {
@@ -49,7 +50,7 @@ int main(int argc, char* argv[]) {
           if (sf::Keyboard::isKeyPressed(sf::Keyboard::Left)) {
             --next;
             e=gameData.GetData(next);
-			
+			gameData.Print(next);
             if (e.type==1) {
               window.clear();
               if (texture.create(e.unk2, e.unk4)) {

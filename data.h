@@ -17,6 +17,7 @@ struct Entry {
   uint8_t unk8=0;
   uint8_t unk9=0;
   std::vector<uint8_t> data;
+  std::vector<uint8_t> umData;
 };
     
 class Data {
