@@ -11,19 +11,25 @@ int main(int argc, char* argv[]) {
   Data gameData;
 
   gameData.Load();
+  /*
+  for (unsigned int i=0; i<4001; i++) {
+    Entry e=gameData.GetData(i);
+    if (e.size==768) {
+      std::cout << e.entry << std::endl;
+    }
+  }
+  */
   
   sf::RenderWindow window(sf::VideoMode(1024, 1024), "Settlers 1 remake");
   window.setFramerateLimit(25);
 
   Entry e=gameData.GetData(next);
 
-
-  
   while (window.isOpen()) {
     sf::Event event;
     sf::Texture texture;
     sf::Sprite sprite;
-    sprite.setScale(sf::Vector2f(8.f, 8.f));    
+    sprite.setScale(sf::Vector2f(2.f, 2.f));    
     
     while (window.pollEvent(event)) {
      switch (event.type) {
@@ -38,13 +44,10 @@ int main(int argc, char* argv[]) {
             gameData.Print(next);
             if (e.type==1) {
     	      window.clear();
-              if (texture.create(e.unk2, e.unk4)) {
+              if (texture.create(e.X, e.Y)) {
                 texture.update(&e.data[0]);
                 sprite.setTexture(texture);
-              } else if (texture.create(sqrt(e.data.size() / 4), sqrt(e.data.size() / 4))) {
-                texture.update(&e.data[0]);
-                sprite.setTexture(texture);
-              }				  
+              }
             }
           }
           if (sf::Keyboard::isKeyPressed(sf::Keyboard::Left)) {
@@ -53,13 +56,10 @@ int main(int argc, char* argv[]) {
             gameData.Print(next);
             if (e.type==1) {
               window.clear();
-              if (texture.create(e.unk2, e.unk4)) {
+              if (texture.create(e.X, e.Y)) {
                 texture.update(&e.data[0]);
                 sprite.setTexture(texture);
-              } else if (texture.create(sqrt(e.data.size() / 4), sqrt(e.data.size() / 4))) {
-                texture.update(&e.data[0]);
-                sprite.setTexture(texture);
-              }				  
+              }
             }
           }
           break;
