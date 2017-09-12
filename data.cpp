@@ -16,34 +16,105 @@
 */
 
 void Data::Load() {
-  std::ifstream file("SPAE.PA", std::ios::binary);
+  std::ifstream file("SPAE.PA", std::ios::binary | std::ios::ate);
 
   if (file.good()) {
     union {
-      char* Bytes = new char[4];
-      unsigned int* Int;
+      char Byte[4];
+      uint16_t Word;
+      unsigned int Int;
     } c;
-
-    file.read(c.Bytes, 4);
-    fileHeader=*c.Int;
-
-    file.read(c.Bytes, 4);
-    totEntries=*c.Int;
-
-    Entry ent;
-    for (unsigned int i=0;i<=totEntries;++i) {
-      ent.entry=i;
-      file.read(c.Bytes, 4);
-      ent.size=*c.Int;
-
-      file.read(c.Bytes, 4);
-      ent.offset=*c.Int;
-      vEntry.push_back(ent);
-    }
-    delete[] c.Bytes;
+    
+    unsigned int fileSize=file.tellg();
+    char* byte = new char[fileSize];
+    
+    file.seekg(file.beg);
+    file.read(byte, fileSize);
     file.close();
+    
+    for (int i=0; i!=4; ++i) {
+      c.Byte[i]=byte[i];
+    }
+    fileHeader=c.Int;
 
-    InternalGetData();
+   for (int i=0; i!=4; ++i) {
+      c.Byte[i]=byte[i+4];
+    }
+    totEntries=c.Int;
+   
+    Entry ent;
+    vEntry.reserve(totEntries);        
+    
+    // Satan has returned from the moons of endor and says that
+    // f=2 ??? I thought it should be 8
+    for (unsigned int i=0, f=2; i<totEntries*2; ++i, ++f) {
+      if (i%2==0) {
+        for (int b=0; b!=4; ++b) {
+          c.Byte[b]=byte[f*4+b];
+        }
+        ent.size=c.Int;
+      } else {
+        for (int b=0; b!=4; ++b) {
+          c.Byte[b]=byte[f*4+b];
+        }
+        ent.entry=i/2;
+        ent.offset=c.Int;
+        vEntry.push_back(ent);        
+      }
+    }
+    
+    c.Int=0;
+    
+    for (auto itr=vEntry.begin(); itr !=vEntry.end(); ++itr) {
+      if (itr->size) {
+        
+        itr->data.reserve(itr->size);
+        
+        if (itr->entry==2) {
+          for (unsigned int i=0; i<itr->size-1; ++i) {
+            uint8_t dt=byte[itr->offset+i];
+            palette[i]=dt;
+          }
+        } else {
+          
+          c.Byte[0]=byte[itr->offset+0];
+          c.Byte[1]=byte[itr->offset+1];
+          itr->type=c.Word;
+
+          if (itr->type==1) {
+            c.Byte[0]=byte[itr->offset+2];
+            c.Byte[1]=byte[itr->offset+3];
+            itr->X=c.Word;
+
+            c.Byte[0]=byte[itr->offset+4];
+            c.Byte[1]=byte[itr->offset+5];
+            itr->Y=c.Word;
+          
+            c.Byte[0]=byte[itr->offset+6];
+            c.Byte[1]=byte[itr->offset+7];
+            itr->unk1=c.Word;
+          
+            c.Byte[0]=byte[itr->offset+8];
+            c.Byte[1]=byte[itr->offset+9];
+            itr->unk2=c.Word;
+            
+            for (unsigned int i=10; i<itr->size; ++i) {
+              uint8_t color=byte[itr->offset+i];
+              itr->umData.push_back(color);
+              itr->data.push_back(palette[color * 3 + 0]);
+              itr->data.push_back(palette[color * 3 + 1]);
+              itr->data.push_back(palette[color * 3 + 2]);
+              itr->data.push_back(0xFF);
+            }
+          } else {
+            for (unsigned int i=3; i<itr->size; ++i) {            
+              itr->data.push_back(byte[itr->offset+i]);
+            }
+          }
+        }
+      }
+    }
+    delete[] byte;
   }
 }
 
@@ -55,111 +126,19 @@ void Data::Print(unsigned int ent) {
         << std::hex << itr->offset << std::dec << " Type: " << +itr->type 
         << " X: " << +itr->X << " Y: " << itr->Y << " Unk1: " << +itr->unk1
         << " Unk2: " << +itr->unk2 << " Data: " << std::endl;
-        uint16_t i=0;
-        for (auto itr2=itr->umData.begin(); itr2!=itr->umData.end(); ++itr2) {
-          std::cout << std::hex << std::setfill('0') << std::setw(2) << +*itr2 << " " << std::dec;
-          ++i;
-          if (i==itr->X) {
-            std::cout << std::endl;
-            i=0;
-          }
-        } 
-        std::cout << std::endl;
+      uint16_t i=0;
+      for (auto itr2=itr->umData.begin(); itr2!=itr->umData.end(); ++itr2) {
+        std::cout << std::hex << std::setfill('0') << std::setw(2) << +*itr2 << " " << std::dec;
+        ++i;
+        if (i==itr->X) {
+          std::cout << std::endl;
+          i=0;
+        }
+      }
+      std::cout << std::endl;
       break;
     }
   }
-}
-
-void Data::InternalGetData() {
-  std::ifstream file("SPAE.PA", std::ios::binary);
-
-  if (file.good()) {
-    union {
-      char* Bytes = new char[2];
-      uint16_t* Word;
-    } c;
-    
-    for (auto itr=vEntry.begin(); itr !=vEntry.end(); ++itr) {
-      if (itr->size) {
-        if (itr->entry==2) {
-          file.seekg(itr->offset);
-          char* byte = new char[1];
-          for (unsigned int i=0; i<itr->size; ++i) {
-            file.read(byte, 1);
-            palette.push_back(*byte);
-          }
-          delete[] byte;
-        } else {
-          
-          file.seekg(itr->offset);
-          file.read(c.Bytes, 2);
-          itr->type=*c.Word;
-
-          file.read(c.Bytes, 2);
-          itr->X=*c.Word;
-          
-          file.read(c.Bytes, 2);
-          itr->Y=*c.Word;
-        
-          file.read(c.Bytes, 2);
-          itr->unk1=*c.Word;
-        
-          file.read(c.Bytes, 2);
-          itr->unk2=*c.Word;
-        
-          // -10 for the read to variables above
-          // Fix and move this to actual display of Sprite
-          if (itr->type==1) {
-            char* byte = new char[1];
-            for (unsigned int i=0; i<itr->size-10; ++i) {
-              file.read(byte, 1);
-              itr->umData.push_back(*byte);
-              
-              uint8_t red;
-              uint8_t green;
-              uint8_t blue;
-             
-              if (palette.size()) {
-                red = palette[*byte * 3 + 0];
-                green = palette[*byte * 3 + 1];
-                blue = palette[*byte * 3 + 2];
-              }
-                            
-              itr->data.push_back(red);
-              itr->data.push_back(green);
-              itr->data.push_back(blue);
-              if (*byte==0x99) {
-                itr->data.push_back(0xFF);
-              } else {
-                itr->data.push_back(0xFF);
-              }
-            }
-            delete[]byte;
-          } else {
-            char* byte = new char[1];
-            for (unsigned int i=0; i<itr->size-10; ++i) {
-              file.read(byte, 1);
-              itr->umData.push_back(*byte);
-              itr->data.push_back(*byte);
-            }
-            delete[]byte;
-          }
-        }
-      }
-    }
-    delete[] c.Bytes;
-    file.close();
-  }
-}
-
-
-unsigned int Data::GetSize(unsigned int ent) {
-  for (auto itr=vEntry.begin(); itr!=vEntry.end(); ++itr) {
-    if (itr->entry==ent) {
-      return itr->size;
-    }
-  }
-  return 0;
 }
 
 Entry Data::GetData(unsigned int ent) {

@@ -11,20 +11,18 @@ struct Entry {
   uint16_t Y=0;
   uint16_t unk1=0;
   uint16_t unk2=0;
-  std::vector<uint8_t> data;
   std::vector<uint8_t> umData;
+  std::vector<uint8_t> data;
 };
     
 class Data {
 public:
   void Load();
   void Print(unsigned int);
-  unsigned int GetSize(unsigned int);
   Entry GetData(unsigned int);
 private:
-  void InternalGetData();
   unsigned int fileHeader;
   unsigned int totEntries;
-  std::vector<uint8_t> palette;
+  uint8_t palette[768];
   std::vector<Entry> vEntry;
 };

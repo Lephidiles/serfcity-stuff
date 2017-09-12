@@ -11,14 +11,6 @@ int main(int argc, char* argv[]) {
   Data gameData;
 
   gameData.Load();
-  /*
-  for (unsigned int i=0; i<4001; i++) {
-    Entry e=gameData.GetData(i);
-    if (e.size==768) {
-      std::cout << e.entry << std::endl;
-    }
-  }
-  */
   
   sf::RenderWindow window(sf::VideoMode(1024, 1024), "Settlers 1 remake");
   window.setFramerateLimit(25);
