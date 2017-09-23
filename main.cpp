@@ -12,16 +12,16 @@ int main(int argc, char* argv[]) {
 
   gameData.Load();
   
-  sf::RenderWindow window(sf::VideoMode(1024, 1024), "Settlers 1 remake");
+  sf::RenderWindow window(sf::VideoMode(2048, 1536), "Settlers 1 remake");
   window.setFramerateLimit(25);
 
   Entry e=gameData.GetData(next);
-
+  
   while (window.isOpen()) {
     sf::Event event;
     sf::Texture texture;
     sf::Sprite sprite;
-    sprite.setScale(sf::Vector2f(2.f, 2.f));    
+    sprite.setScale(sf::Vector2f(4.f, 4.f));    
     
     while (window.pollEvent(event)) {
      switch (event.type) {
@@ -38,6 +38,7 @@ int main(int argc, char* argv[]) {
     	      window.clear();
               if (texture.create(e.X, e.Y)) {
                 texture.update(&e.data[0]);
+                texture.setSmooth(true);
                 sprite.setTexture(texture);
               }
             }
@@ -50,6 +51,7 @@ int main(int argc, char* argv[]) {
               window.clear();
               if (texture.create(e.X, e.Y)) {
                 texture.update(&e.data[0]);
+                texture.setSmooth(true);
                 sprite.setTexture(texture);
               }
             }

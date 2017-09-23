@@ -63,8 +63,6 @@ void Data::Load() {
       }
     }
     
-    c.Int=0;
-    
     for (auto itr=vEntry.begin(); itr !=vEntry.end(); ++itr) {
       if (itr->size) {
         
@@ -92,22 +90,44 @@ void Data::Load() {
           
             c.Byte[0]=byte[itr->offset+6];
             c.Byte[1]=byte[itr->offset+7];
-            itr->unk1=c.Word;
-          
-            c.Byte[0]=byte[itr->offset+8];
-            c.Byte[1]=byte[itr->offset+9];
-            itr->unk2=c.Word;
+            c.Byte[2]=byte[itr->offset+8];
+            c.Byte[3]=byte[itr->offset+9];
+            itr->unk1=c.Int;
             
-            for (unsigned int i=10; i<itr->size; ++i) {
-              uint8_t color=byte[itr->offset+i];
-              itr->umData.push_back(color);
-              itr->data.push_back(palette[color * 3 + 0]);
-              itr->data.push_back(palette[color * 3 + 1]);
-              itr->data.push_back(palette[color * 3 + 2]);
-              itr->data.push_back(0xFF);
+            // Normal Sprite
+            if (!itr->unk1) {
+              for (unsigned int i=10; i<itr->size; ++i) {
+                uint8_t color=byte[itr->offset+i];
+                itr->data.push_back(palette[color * 3 + 0]);
+                itr->data.push_back(palette[color * 3 + 1]);
+                itr->data.push_back(palette[color * 3 + 2]);
+                itr->data.push_back(0xFF);
+              }
+            
+            // Transparent Sprite
+            // number to start -> number of data -> DATA -> number of data -> DATA
+            } else {
+              for (unsigned int i=10; i<itr->size; ++i) {
+                uint8_t control=byte[itr->offset+i];
+                for (uint8_t fill=0; fill<control; ++fill) {
+                  itr->data.push_back(0xBE);
+                  itr->data.push_back(0x3C);
+                  itr->data.push_back(0xBE);
+                  itr->data.push_back(0x00);
+                }
+                ++i;
+                control=byte[itr->offset+i];
+                for (uint8_t dt=0; dt<control; ++dt, ++i) {
+                  uint8_t color=byte[itr->offset+i+1];
+                  itr->data.push_back(palette[color * 3 + 0]);
+                  itr->data.push_back(palette[color * 3 + 1]);
+                  itr->data.push_back(palette[color * 3 + 2]);
+                  itr->data.push_back(0xFF);
+                }
+              }
             }
           } else {
-            for (unsigned int i=3; i<itr->size; ++i) {            
+            for (unsigned int i=2; i<itr->size; ++i) {            
               itr->data.push_back(byte[itr->offset+i]);
             }
           }
@@ -122,15 +142,15 @@ void Data::Print(unsigned int ent) {
   for (auto itr=vEntry.begin(); itr!=vEntry.end(); ++itr) {
     if (itr->entry==ent) {
     
-      std::cout << "Entry: " << itr->entry << " Size: " << itr->size << " Offset: "
-        << std::hex << itr->offset << std::dec << " Type: " << +itr->type 
-        << " X: " << +itr->X << " Y: " << itr->Y << " Unk1: " << +itr->unk1
-        << " Unk2: " << +itr->unk2 << " Data: " << std::endl;
+      std::cout << "Entry: " << itr->entry << " Size: " // << std::hex 
+        << itr->size << " Offset: " << itr->offset << " Type: " 
+        << +itr->type << " X: " << +itr->X << " Y: " << itr->Y << " Unk1: " 
+        << +itr->unk1 << /*std::dec <<*/ " Data: " << std::endl;
       uint16_t i=0;
-      for (auto itr2=itr->umData.begin(); itr2!=itr->umData.end(); ++itr2) {
+      for (auto itr2=itr->data.begin(); itr2!=itr->data.end(); ++itr2) {
         std::cout << std::hex << std::setfill('0') << std::setw(2) << +*itr2 << " " << std::dec;
         ++i;
-        if (i==itr->X) {
+        if (i==itr->X*4) {
           std::cout << std::endl;
           i=0;
         }

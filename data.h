@@ -9,9 +9,7 @@ struct Entry {
   uint16_t type=0; // 0: Unk, 1: Sprite, 2: Animation, 3: Sound, 4: Music
   uint16_t X=0;
   uint16_t Y=0;
-  uint16_t unk1=0;
-  uint16_t unk2=0;
-  std::vector<uint8_t> umData;
+  unsigned int unk1=0;
   std::vector<uint8_t> data;
 };
     
